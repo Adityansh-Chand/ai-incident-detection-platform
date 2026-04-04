@@ -14,3 +14,10 @@ AnomalyModel --> Threshold
 Threshold --> AlertSystem
 AlertSystem --> Dashboard
 ```
+
+
+---
+
+# License
+
+MIT License
