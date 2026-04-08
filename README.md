@@ -17,9 +17,9 @@ AnomalyScore --> Evaluation
 data → features → anomaly score → evaluate
 
 ### Highlights
-synthetic dataset generator
-evaluation-aware pipeline
-modular ML structure
+synthetic dataset generator, 
+evaluation-aware pipeline and 
+modular ML structure.
 
 ## License
 MIT
