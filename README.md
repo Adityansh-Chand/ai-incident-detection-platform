@@ -1,22 +1,25 @@
 
-# Ai Incident Detection Platform
+# AI Incident Detection Platform
 
-AI engineering project demonstrating modular pipeline design, evaluation awareness, and production-style architecture.
+ML pipeline for anomaly detection using synthetic time-series simulation.
 
-## Key Capabilities
+## Architecture
 
-• config-driven pipelines
-• modular components
-• evaluation scaffold
-• logging enabled
-• test structure
+```mermaid
+flowchart LR
+Logs --> FeatureExtraction
+FeatureExtraction --> Model
+Model --> AnomalyScore
+AnomalyScore --> Evaluation
+``
 
-## Engineering Focus
+## Pipeline
+data â†’ features â†’ anomaly score â†’ evaluate
 
-reproducible pipelines
-structured reasoning
-extensible architecture
+### Highlights
+synthetic dataset generator
+evaluation-aware pipeline
+modular ML structure
 
 ## License
-
 MIT
