@@ -11,7 +11,7 @@ Logs --> FeatureExtraction
 FeatureExtraction --> Model
 Model --> AnomalyScore
 AnomalyScore --> Evaluation
-``
+```
 
 ## Pipeline
 data → features → anomaly score → evaluate
