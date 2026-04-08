@@ -1,23 +1,22 @@
-# AI Incident Detection Platform
 
-ML-based anomaly detection system for operational logs.
+# Ai Incident Detection Platform
 
-## Architecture
+AI engineering project demonstrating modular pipeline design, evaluation awareness, and production-style architecture.
 
-```mermaid
-flowchart LR
+## Key Capabilities
 
-Logs --> FeaturePipeline
-FeaturePipeline --> Vectorizer
-Vectorizer --> AnomalyModel
-AnomalyModel --> Threshold
-Threshold --> AlertSystem
-AlertSystem --> Dashboard
-```
+• config-driven pipelines
+• modular components
+• evaluation scaffold
+• logging enabled
+• test structure
 
+## Engineering Focus
 
----
+reproducible pipelines
+structured reasoning
+extensible architecture
 
-# License
+## License
 
-MIT License
+MIT
