@@ -1,4 +1,7 @@
-id,feature,label
-1,example,0
-2,example,1
-3,example,0
+id,service,latency_ms,error_count,timeout_count,traffic_rpm,label
+1,checkout,120,0,0,960,0
+2,checkout,145,1,0,1010,0
+3,payments,175,0,1,890,0
+4,payments,910,18,7,2400,1
+5,search,132,0,0,1100,0
+6,search,780,12,5,2050,1
