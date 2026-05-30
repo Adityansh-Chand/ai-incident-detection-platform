@@ -1,0 +1,21 @@
+{
+  "telemetry_event": {
+    "event_id": "string",
+    "service": "string",
+    "environment": "production | staging",
+    "region": "string",
+    "latency_ms": "number",
+    "error_count": "integer",
+    "timeout_count": "integer",
+    "traffic_rpm": "number",
+    "cpu_percent": "number",
+    "memory_percent": "number",
+    "observed_at": "ISO-8601 timestamp"
+  },
+  "incident_label": {
+    "event_id": "string",
+    "label": "0 | 1",
+    "severity": "low | medium | high | critical",
+    "incident_id": "string"
+  }
+}
