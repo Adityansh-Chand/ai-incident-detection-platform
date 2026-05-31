@@ -1,0 +1,7 @@
+{
+  "service": "checkout",
+  "latency_ms": 900,
+  "error_count": 20,
+  "timeout_count": 6,
+  "traffic_rpm": 2300
+}
