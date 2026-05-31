@@ -1,0 +1,11 @@
+{
+  "service": "checkout",
+  "features": {
+    "latency_ms": 900.0,
+    "error_count": 20.0,
+    "timeout_count": 6.0,
+    "traffic_rpm": 2300.0
+  },
+  "score": 19.5,
+  "is_anomaly": true
+}

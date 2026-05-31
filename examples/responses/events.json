@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "event_type": "incident_score",
+      "payload": {
+        "service": "checkout",
+        "score": 19.5,
+        "is_anomaly": true
+      },
+      "created_at": "2026-05-31 10:00:00"
+    }
+  ]
+}
