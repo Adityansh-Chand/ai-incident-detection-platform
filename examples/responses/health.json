@@ -1,4 +1,19 @@
 {
   "status": "running",
-  "threshold": 3.0
+  "model": {
+    "model_type": "IsolationForest (fitted, unsupervised on normal traffic)",
+    "data_source": "synthetic -- training/generate_timeseries.py",
+    "split": "chronological per service (no shuffling)",
+    "threshold": 0.605316,
+    "target_precision": 0.75,
+    "test_f1": 0.8077,
+    "test_episode_recall": 1.0,
+    "sklearn_version": "1.8.0"
+  },
+  "services_with_fitted_baselines": [
+    "checkout",
+    "identity",
+    "payments",
+    "search"
+  ]
 }

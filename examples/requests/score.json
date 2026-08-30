@@ -1,7 +1,9 @@
 {
   "service": "checkout",
-  "latency_ms": 900,
-  "error_count": 20,
+  "latency_ms": 620,
+  "error_count": 18,
   "timeout_count": 6,
-  "traffic_rpm": 2300
+  "traffic_rpm": 1150,
+  "cpu_percent": 78,
+  "memory_percent": 70
 }
