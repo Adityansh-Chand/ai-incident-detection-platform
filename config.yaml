@@ -1,8 +1,13 @@
 
-pipeline:
-  chunk_size: 500
-  top_k: 5
-  rerank: true
+model:
+  artifact_dir: models/artifacts
+  # The alerting threshold is calibrated on the validation window, not set here.
+  # See training/train.py: TARGET_PRECISION.
+
+data:
+  dataset: datasets/telemetry.csv
+  source: synthetic
+  generator: training/generate_timeseries.py
 
 logging:
   level: INFO

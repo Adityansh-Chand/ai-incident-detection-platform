@@ -5,14 +5,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from monitoring.metrics import metrics
-from models.anomaly_model import default_model
+from models.anomaly_model import known_services, model_metadata, predict
 from pipeline.features import extract_features, features_as_dict
 from utils.security import request_id_middleware, require_api_key
 from utils.storage import recent_events, save_event
 
 app = FastAPI(title="AI Incident Detection Platform", version="1.0.0")
 app.middleware("http")(request_id_middleware)
-model = default_model()
 
 
 class IncidentEvent(BaseModel):
@@ -21,6 +20,11 @@ class IncidentEvent(BaseModel):
     error_count: int = Field(0, ge=0)
     timeout_count: int = Field(0, ge=0)
     traffic_rpm: float = Field(0, ge=0)
+    # Present in datasets/production_schema.json and used by the fitted model.
+    # Optional so existing four-field callers keep working; omitted values fall
+    # back to typical idle levels rather than zero.
+    cpu_percent: float = Field(40.0, ge=0, le=100)
+    memory_percent: float = Field(55.0, ge=0, le=100)
 
 
 @app.exception_handler(HTTPException)
@@ -61,7 +65,12 @@ def health():
 
 @app.get("/health")
 def health_check():
-    return {"status": "running", "threshold": model.threshold}
+    """Health plus the identity of the detector actually loaded."""
+    return {
+        "status": "running",
+        "model": model_metadata(),
+        "services_with_fitted_baselines": known_services(),
+    }
 
 
 @app.get("/metrics")
@@ -78,7 +87,7 @@ def events(limit: int = 20):
 def score_event(event: IncidentEvent):
     metrics.increment("scores_total")
     features = extract_features(event.model_dump())
-    prediction = model.predict(features)
+    prediction = predict(features, event.service)
     result = {
         "service": event.service,
         "features": features_as_dict(features),
