@@ -140,6 +140,30 @@ Kubernetes manifests live in `k8s/deployment.yaml` and include probes, resource
 limits, a Service, and a PVC for the SQLite event store. The default manifest
 uses one replica because SQLite is the default event store.
 
+## Cross-service integration (optional)
+
+Point scoring answers *"is this minute anomalous"*. Another service asking *"is
+checkout broken right now?"* needs state across minutes, so this service tracks a
+rolling window:
+
+```
+GET /incidents/active?service=checkout
+```
+
+A service is **active** when it has produced `INCIDENT_MIN_ANOMALIES` (default 3)
+anomalous scores within `INCIDENT_WINDOW_SECONDS` (default 900). Single anomalous
+minutes do not open an incident — that is the same reasoning behind measuring
+episode recall rather than point recall.
+
+The customer operations service uses this to tell an incident symptom apart from
+an individual customer problem: a complaint about a currently-degraded service
+should not be answered with an individual refund for a fault already being fixed.
+
+**This state is in-memory and per-process.** It is a demonstration of the
+integration surface, not a durable incident store — a real deployment would put it
+in shared state so every replica agrees. Scoring, the model, and the committed
+metrics are unaffected.
+
 ## Reviewer Status
 
 **What is real and independently checkable:**
