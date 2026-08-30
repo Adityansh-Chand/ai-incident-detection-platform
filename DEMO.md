@@ -1,6 +1,7 @@
 # Demo
 
-This demo shows the incident detection service scoring telemetry, exposing
+This demo shows the incident detection service (fitted IsolationForest, see
+`models/artifacts/model_card.md`) scoring telemetry, exposing
 metrics, and writing an audit event.
 
 ## Run Locally

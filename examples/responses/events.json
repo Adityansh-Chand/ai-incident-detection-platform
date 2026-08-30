@@ -4,10 +4,91 @@
       "event_type": "incident_score",
       "payload": {
         "service": "checkout",
-        "score": 19.5,
-        "is_anomaly": true
+        "features": {
+          "latency_ms": 620.0,
+          "error_count": 18.0,
+          "timeout_count": 6.0,
+          "traffic_rpm": 1150.0,
+          "cpu_percent": 78.0,
+          "memory_percent": 70.0
+        },
+        "score": 0.762242,
+        "threshold": 0.605316,
+        "is_anomaly": true,
+        "service_baseline_known": true,
+        "deviations": [
+          [
+            "error_count",
+            29.797
+          ],
+          [
+            "latency_ms",
+            22.613
+          ],
+          [
+            "timeout_count",
+            16.324
+          ],
+          [
+            "memory_percent",
+            4.901
+          ],
+          [
+            "cpu_percent",
+            4.716
+          ],
+          [
+            "traffic_rpm",
+            -0.854
+          ]
+        ]
       },
-      "created_at": "2026-05-31 10:00:00"
+      "created_at": "2026-08-30 18:25:27"
+    },
+    {
+      "event_type": "incident_score",
+      "payload": {
+        "service": "checkout",
+        "features": {
+          "latency_ms": 900.0,
+          "error_count": 20.0,
+          "timeout_count": 6.0,
+          "traffic_rpm": 2300.0,
+          "cpu_percent": 40.0,
+          "memory_percent": 55.0
+        },
+        "score": 0.740744,
+        "threshold": 0.605316,
+        "is_anomaly": true,
+        "service_baseline_known": true,
+        "deviations": [
+          [
+            "latency_ms",
+            37.032
+          ],
+          [
+            "error_count",
+            33.174
+          ],
+          [
+            "timeout_count",
+            16.324
+          ],
+          [
+            "traffic_rpm",
+            2.532
+          ],
+          [
+            "memory_percent",
+            -1.235
+          ],
+          [
+            "cpu_percent",
+            -0.947
+          ]
+        ]
+      },
+      "created_at": "2026-08-30 18:25:20"
     }
   ]
 }
