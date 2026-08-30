@@ -1,0 +1,61 @@
+{
+  "model_type": "IsolationForest (fitted, unsupervised on normal traffic)",
+  "data_source": "synthetic -- training/generate_timeseries.py",
+  "features": [
+    "latency_ms",
+    "error_count",
+    "timeout_count",
+    "traffic_rpm",
+    "cpu_percent",
+    "memory_percent"
+  ],
+  "split": "chronological per service (no shuffling)",
+  "n_train": 28224,
+  "n_validation": 6048,
+  "n_test": 6048,
+  "anomaly_rate_test": 0.042,
+  "target_precision": 0.75,
+  "target_precision_met_on_validation": true,
+  "threshold": 0.605316,
+  "contamination": 0.03,
+  "n_estimators": 300,
+  "random_state": 42,
+  "validation": {
+    "precision": 0.7588,
+    "recall": 0.8377,
+    "f1": 0.7963,
+    "pr_auc": 0.8497,
+    "alerts_per_hour": 1.687,
+    "episodes": 12,
+    "episodes_detected": 12,
+    "episode_recall": 1.0,
+    "median_detection_latency_minutes": 1.0
+  },
+  "test": {
+    "precision": 0.7895,
+    "recall": 0.8268,
+    "f1": 0.8077,
+    "pr_auc": 0.8523,
+    "alerts_per_hour": 2.639,
+    "episodes": 17,
+    "episodes_detected": 17,
+    "episode_recall": 1.0,
+    "median_detection_latency_minutes": 1.0
+  },
+  "baseline_zscore": {
+    "threshold": 3.0,
+    "test": {
+      "precision": 0.5538,
+      "recall": 0.8504,
+      "f1": 0.6708,
+      "pr_auc": 0.8597,
+      "alerts_per_hour": 3.869,
+      "episodes": 17,
+      "episodes_detected": 17,
+      "episode_recall": 1.0,
+      "median_detection_latency_minutes": 1.0
+    }
+  },
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.4.2"
+}
