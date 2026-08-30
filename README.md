@@ -164,6 +164,41 @@ integration surface, not a durable incident store — a real deployment would pu
 in shared state so every replica agrees. Scoring, the model, and the committed
 metrics are unaffected.
 
+### Pushing events (optional)
+
+Everything above is pull: another service asks a question and waits. That cannot
+express the thing this platform is named for -- noticing a problem and telling
+someone unprompted.
+
+```
+EVENT_SUBSCRIBERS    comma-separated base URLs to deliver to
+EVENT_MAX_ATTEMPTS   retries before dead-lettering (default 4)
+EVENT_BACKOFF_SECONDS  base for exponential backoff (default 1.0)
+```
+
+`incident.opened` fires when a service *transitions* into an incident, and
+`incident.resolved` when it clears. Publishing on every anomalous minute would
+spam subscribers with the same news.
+
+What push costs, stated rather than glossed:
+
+- **Detection never blocks on delivery.** Events go to an in-memory outbox; a
+  background worker delivers them.
+- **Delivery is at-least-once, not exactly-once.** A delivery that succeeds and
+  whose acknowledgement is lost is indistinguishable from one that failed, so
+  exactly-once would be a lie. Subscribers **must** be idempotent; every event
+  carries a stable `event_id`.
+- **Failures are visible.** Events that exhaust their retries land at
+  `GET /events/dlq` instead of vanishing. A bus whose failures disappear is worse
+  than no bus, because it looks like it is working. `GET /events/outbox` shows
+  what is queued, with attempt counts and last error.
+- **A 4xx is not retried.** The subscriber rejected the payload; retrying burns
+  attempts to reach the same dead-letter queue.
+
+**This is not a broker.** No durable log, no partitioning, no consumer groups,
+and the outbox is lost on restart. It is a webhook fan-out with the failure
+handling that makes push usable.
+
 ## Reviewer Status
 
 **What is real and independently checkable:**

@@ -26,6 +26,10 @@ MAX_TRACKED_PER_SERVICE = 500
 
 _lock = threading.Lock()
 _events = defaultdict(lambda: deque(maxlen=MAX_TRACKED_PER_SERVICE))
+# Which services were active at the last observation, so transitions can be
+# detected. Publishing on every anomalous minute would spam subscribers; the
+# event that matters is the service *becoming* degraded, and later recovering.
+_active = set()
 
 
 def _now():
@@ -39,15 +43,28 @@ def _prune(service, now):
 
 
 def record(service, score, is_anomaly, severity_hint=None):
-    """Record one scored event. Only anomalies are retained."""
-    if not is_anomaly:
-        return
+    """Record one scored event and return any state transition it caused.
+
+    Returns None, "opened", or "resolved". The caller publishes on a transition.
+    """
     now = _now()
+    if is_anomaly:
+        with _lock:
+            _prune(service, now)
+            _events[service].append(
+                {"at": now, "score": float(score), "severity": severity_hint}
+            )
+
+    incident = active_incident(service)
     with _lock:
-        _prune(service, now)
-        _events[service].append(
-            {"at": now, "score": float(score), "severity": severity_hint}
-        )
+        was_active = service in _active
+        if incident and not was_active:
+            _active.add(service)
+            return "opened"
+        if not incident and was_active:
+            _active.discard(service)
+            return "resolved"
+    return None
 
 
 def active_incident(service):
@@ -85,3 +102,4 @@ def reset():
     """Test hook."""
     with _lock:
         _events.clear()
+        _active.clear()
