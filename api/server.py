@@ -6,6 +6,13 @@ from pydantic import BaseModel, Field
 
 from monitoring.metrics import metrics
 from models.anomaly_model import known_services, model_metadata, predict
+from monitoring.incident_state import (
+    MIN_ANOMALIES,
+    WINDOW_SECONDS,
+    active_incident,
+    active_incidents,
+    record,
+)
 from pipeline.features import extract_features, features_as_dict
 from utils.security import request_id_middleware, require_api_key
 from utils.storage import recent_events, save_event
@@ -70,6 +77,11 @@ def health_check():
         "status": "running",
         "model": model_metadata(),
         "services_with_fitted_baselines": known_services(),
+        "active_incidents": len(active_incidents()),
+        "incident_state": (
+            "in-memory, per-process rolling window -- a demonstration surface, "
+            "not a durable incident store"
+        ),
     }
 
 
@@ -83,11 +95,41 @@ def events(limit: int = 20):
     return {"events": recent_events(limit=min(limit, 100))}
 
 
+@app.get("/incidents/active", dependencies=[Depends(require_api_key)])
+def list_active_incidents(service: str | None = None):
+    """Which services are currently in an incident.
+
+    Consumed by the customer operations service: a complaint about a service
+    that is currently degraded is an incident symptom, not an individual issue,
+    and should be handled differently.
+    """
+    metrics.increment("incident_lookups_total")
+    if service:
+        incident = active_incident(service)
+        return {
+            "service": service,
+            "active": incident is not None,
+            "incident": incident,
+            "rule": f"{MIN_ANOMALIES}+ anomalous minutes within {WINDOW_SECONDS:.0f}s",
+        }
+    incidents = active_incidents()
+    return {
+        "active_count": len(incidents),
+        "incidents": incidents,
+        "rule": f"{MIN_ANOMALIES}+ anomalous minutes within {WINDOW_SECONDS:.0f}s",
+    }
+
+
 @app.post("/score", dependencies=[Depends(require_api_key)])
 def score_event(event: IncidentEvent):
     metrics.increment("scores_total")
     features = extract_features(event.model_dump())
     prediction = predict(features, event.service)
+
+    # Feed the rolling incident window so other services can ask whether this
+    # service is currently degraded, rather than only scoring one minute.
+    record(event.service, prediction["score"], prediction["is_anomaly"])
+
     result = {
         "service": event.service,
         "features": features_as_dict(features),
