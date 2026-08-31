@@ -38,6 +38,8 @@ from sklearn.metrics import average_precision_score, precision_recall_fscore_sup
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from monitoring.drift import build_reference  # noqa: E402
+
 from pipeline.features import FEATURE_NAMES  # noqa: E402
 
 DATA_PATH = ROOT / "datasets" / "telemetry.csv"
@@ -46,6 +48,7 @@ MODEL_PATH = ARTIFACT_DIR / "anomaly_model.joblib"
 METRICS_PATH = ARTIFACT_DIR / "metrics.json"
 BASELINES_PATH = ARTIFACT_DIR / "service_baselines.json"
 MODEL_CARD_PATH = ARTIFACT_DIR / "model_card.md"
+DRIFT_REFERENCE_PATH = ARTIFACT_DIR / "drift_reference.json"
 
 RANDOM_STATE = 42
 TRAIN_FRACTION = 0.70
@@ -206,6 +209,9 @@ def train():
     model.fit(x_train[normal_mask])
 
     # Higher score = more anomalous.
+    # The score distribution on NORMAL training traffic is the drift reference:
+    # what this detector expects a healthy period to look like.
+    drift_reference = build_reference(-model.score_samples(x_train[normal_mask]))
     forest_validation = -model.score_samples(x_validation)
     forest_test = -model.score_samples(x_test)
 
@@ -242,7 +248,7 @@ def train():
         "sklearn_version": sklearn.__version__,
         "numpy_version": np.__version__,
     }
-    return model, baselines, metrics
+    return model, baselines, metrics, drift_reference
 
 
 def render_model_card(metrics):
@@ -321,7 +327,7 @@ does the reverse. It is exposed rather than buried so the trade-off is deliberat
 """
 
 
-def write_artifacts(model, baselines, metrics):
+def write_artifacts(model, baselines, metrics, drift_reference):
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
     METRICS_PATH.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
@@ -337,6 +343,11 @@ def write_artifacts(model, baselines, metrics):
         encoding="utf-8",
     )
     MODEL_CARD_PATH.write_text(render_model_card(metrics), encoding="utf-8")
+    # The score distribution on normal training traffic, so the running detector
+    # can tell whether it is still watching the same kind of system.
+    DRIFT_REFERENCE_PATH.write_text(
+        json.dumps(drift_reference, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def main():
@@ -344,7 +355,7 @@ def main():
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args()
 
-    model, baselines, metrics = train()
+    model, baselines, metrics, drift_reference = train()
 
     if args.verify:
         if not METRICS_PATH.exists():
@@ -358,7 +369,7 @@ def main():
         print(f"OK: retrained test F1 {new} matches committed {old}")
         return 0
 
-    write_artifacts(model, baselines, metrics)
+    write_artifacts(model, baselines, metrics, drift_reference)
     test = metrics["test"]
     base = metrics["baseline_zscore"]["test"]
     print(f"split            : {metrics['split']}")

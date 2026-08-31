@@ -1,9 +1,12 @@
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from monitoring.drift import DriftMonitor
 from monitoring.metrics import metrics
 from models.anomaly_model import known_services, model_metadata, predict
 from events.bus import INCIDENT_OPENED, INCIDENT_RESOLVED, get_bus
@@ -32,6 +35,15 @@ API_VERSION = "v1"
 # The unversioned alias is kept because consumers already call it. It is the
 # deprecation path, not a permanent second interface.
 api = APIRouter()
+
+# Live anomaly-score distribution against the healthy traffic the detector was
+# fitted on. The real-data track makes the case concretely: configured for a 3%
+# alert budget, this approach fires on 21%, 6% and 52% of points across three real
+# machines, purely because the test period is not the training period.
+ARTIFACT_DIR = Path(__file__).resolve().parents[1] / "models" / "artifacts"
+drift_monitor = DriftMonitor.from_file(
+    ARTIFACT_DIR / "drift_reference.json", name="anomaly_score"
+)
 
 
 class IncidentEvent(BaseModel):
@@ -168,6 +180,7 @@ def score_event(event: IncidentEvent, http_request: Request):
     metrics.increment("scores_total")
     features = extract_features(event.model_dump())
     prediction = predict(features, event.service)
+    drift_monitor.observe(prediction["score"])
 
     # Feed the rolling incident window so other services can ask whether this
     # service is currently degraded, rather than only scoring one minute.
@@ -196,6 +209,12 @@ def score_event(event: IncidentEvent, http_request: Request):
     }
     save_event("incident_score", result, current_request_id(http_request))
     return result
+
+
+@api.get("/drift", dependencies=[Depends(require_api_key)])
+def drift():
+    """Is the detector still watching the population it was fitted on?"""
+    return drift_monitor.report()
 
 
 @app.get("/version")
