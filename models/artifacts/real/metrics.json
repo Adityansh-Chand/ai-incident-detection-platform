@@ -1,0 +1,149 @@
+{
+  "model_type": "IsolationForest (fitted, unsupervised on normal traffic)",
+  "note": "same approach as the served detector, fitted on real telemetry",
+  "data_source": "REAL -- Server Machine Dataset (MIT licence)",
+  "citation": "Su, Zhao, Niu, Liu, Sun and Pei, 'Robust Anomaly Detection for Multivariate Time Series through Stochastic Recurrent Neural Networks', KDD 2019",
+  "url": "https://github.com/NetManAIOps/OmniAnomaly",
+  "ground_truth": "anomalies labelled by the operators from real incident reports",
+  "machines": [
+    "machine-1-1",
+    "machine-2-1",
+    "machine-3-1"
+  ],
+  "machine_selection_rule": "first machine of each of the three groups, fixed before any result was seen -- reporting a subset chosen after the fact would be cherry-picking",
+  "split": "fit on the anomaly-free train split; threshold set from the training score distribution at a fixed alert budget, using no labels; the labelled test set is scored exactly once",
+  "alert_budget": 0.03,
+  "accuracy_note": "deliberately not reported: at a 1-9% anomaly rate an always-negative predictor scores 91-99%",
+  "pooled_report": {
+    "precision": 0.1481,
+    "recall": 0.4547,
+    "f1": 0.1908,
+    "pr_auc": 0.1897,
+    "alerts_per_hour": 16.6572,
+    "episodes": 25,
+    "episodes_detected": 21,
+    "baseline_zscore_precision": 0.134,
+    "baseline_zscore_recall": 0.7196,
+    "baseline_zscore_pr_auc": 0.4348,
+    "baseline_zscore_alerts_per_hour": 18.2959,
+    "episode_recall": 0.84
+  },
+  "per_machine": [
+    {
+      "machine": "machine-1-1",
+      "n_train": 28479,
+      "n_report": 28479,
+      "n_features": 38,
+      "anomaly_rate_report": 0.0946,
+      "threshold": 0.57492,
+      "test_alert_rate": 0.2109,
+      "report": {
+        "precision": 0.2421,
+        "recall": 0.5397,
+        "f1": 0.3343,
+        "pr_auc": 0.3796,
+        "alerts_per_hour": 12.651,
+        "episodes": 8,
+        "episodes_detected": 5,
+        "episode_recall": 0.625,
+        "median_detection_latency_minutes": 7.0
+      },
+      "baseline_zscore": {
+        "precision": 0.1821,
+        "recall": 0.9996,
+        "f1": 0.3081,
+        "pr_auc": 0.4451,
+        "alerts_per_hour": 31.149,
+        "episodes": 8,
+        "episodes_detected": 8,
+        "episode_recall": 1.0,
+        "median_detection_latency_minutes": 0.0
+      },
+      "threshold_free_pr_auc": {
+        "isolation_forest": 0.3796,
+        "max_abs_z": 0.4451,
+        "mean_abs_z": 0.4149,
+        "l2_norm": 0.4766,
+        "random_equals_base_rate": 0.0946
+      }
+    },
+    {
+      "machine": "machine-2-1",
+      "n_train": 23693,
+      "n_report": 23694,
+      "n_features": 38,
+      "anomaly_rate_report": 0.0494,
+      "threshold": 0.53265,
+      "test_alert_rate": 0.0615,
+      "report": {
+        "precision": 0.2011,
+        "recall": 0.2504,
+        "f1": 0.2231,
+        "pr_auc": 0.159,
+        "alerts_per_hour": 3.69,
+        "episodes": 13,
+        "episodes_detected": 12,
+        "episode_recall": 0.9231,
+        "median_detection_latency_minutes": 3.0
+      },
+      "baseline_zscore": {
+        "precision": 0.2023,
+        "recall": 0.2872,
+        "f1": 0.2374,
+        "pr_auc": 0.1857,
+        "alerts_per_hour": 4.206,
+        "episodes": 13,
+        "episodes_detected": 13,
+        "episode_recall": 1.0,
+        "median_detection_latency_minutes": 3.0
+      },
+      "threshold_free_pr_auc": {
+        "isolation_forest": 0.159,
+        "max_abs_z": 0.1857,
+        "mean_abs_z": 0.1789,
+        "l2_norm": 0.2077,
+        "random_equals_base_rate": 0.0494
+      }
+    },
+    {
+      "machine": "machine-3-1",
+      "n_train": 28700,
+      "n_report": 28700,
+      "n_features": 38,
+      "anomaly_rate_report": 0.0107,
+      "threshold": 0.566167,
+      "test_alert_rate": 0.5223,
+      "report": {
+        "precision": 0.0111,
+        "recall": 0.539,
+        "f1": 0.0217,
+        "pr_auc": 0.0266,
+        "alerts_per_hour": 31.338,
+        "episodes": 4,
+        "episodes_detected": 4,
+        "episode_recall": 1.0,
+        "median_detection_latency_minutes": 1.5
+      },
+      "baseline_zscore": {
+        "precision": 0.0299,
+        "recall": 0.7987,
+        "f1": 0.0577,
+        "pr_auc": 0.6301,
+        "alerts_per_hour": 17.174,
+        "episodes": 4,
+        "episodes_detected": 4,
+        "episode_recall": 1.0,
+        "median_detection_latency_minutes": 2.0
+      },
+      "threshold_free_pr_auc": {
+        "isolation_forest": 0.0266,
+        "max_abs_z": 0.6301,
+        "mean_abs_z": 0.3851,
+        "l2_norm": 0.5589,
+        "random_equals_base_rate": 0.0107
+      }
+    }
+  ],
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.4.2"
+}

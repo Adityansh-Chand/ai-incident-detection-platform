@@ -28,6 +28,35 @@ jobs:
       - name: Run evaluation
         run: python evaluation/evaluate.py
 
+  real-data:
+    name: Validate on real data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ~60MB across three machines. Not committed; cached on the fetch script so
+      # changing the machine list or a checksum invalidates the cache.
+      - name: Cache Server Machine Dataset
+        uses: actions/cache@v4
+        with:
+          path: datasets/real
+          key: smd-${{ hashFiles('training/fetch_real_data.py') }}
+
+      - name: Fetch real dataset
+        run: python training/fetch_real_data.py --check || python training/fetch_real_data.py
+      - name: Real dataset checksums match
+        run: python training/fetch_real_data.py --check
+
+      - name: Committed real-data metrics are reproducible
+        run: python training/train_real.py --verify
+      - name: Real-data quality gate
+        run: python -m pytest -q tests/test_real_data_quality.py
+
   docker-build:
     name: Docker image build
     runs-on: ubuntu-latest
