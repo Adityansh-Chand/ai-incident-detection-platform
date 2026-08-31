@@ -1,5 +1,5 @@
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -20,6 +20,18 @@ from utils.storage import recent_events, save_event
 
 app = FastAPI(title="AI Incident Detection Platform", version="1.0.0")
 app.middleware("http")(request_id_middleware)
+
+API_VERSION = "v1"
+
+# Data endpoints live on a router so they can be served at BOTH /v1/... and the
+# original unversioned paths from a single definition. Without a version prefix
+# there is no way to change a response shape without breaking every consumer on
+# the same deploy -- the contract checks in the portfolio repo detect that
+# breakage, they do not prevent it.
+#
+# The unversioned alias is kept because consumers already call it. It is the
+# deprecation path, not a permanent second interface.
+api = APIRouter()
 
 
 class IncidentEvent(BaseModel):
@@ -92,12 +104,12 @@ def metrics_endpoint():
     return metrics.snapshot()
 
 
-@app.get("/events", dependencies=[Depends(require_api_key)])
+@api.get("/events", dependencies=[Depends(require_api_key)])
 def events(limit: int = 20):
     return {"events": recent_events(limit=min(limit, 100))}
 
 
-@app.get("/incidents/active", dependencies=[Depends(require_api_key)])
+@api.get("/incidents/active", dependencies=[Depends(require_api_key)])
 def list_active_incidents(service: str | None = None):
     """Which services are currently in an incident.
 
@@ -122,13 +134,13 @@ def list_active_incidents(service: str | None = None):
     }
 
 
-@app.get("/events/outbox", dependencies=[Depends(require_api_key)])
+@api.get("/events/outbox", dependencies=[Depends(require_api_key)])
 def outbox():
     """Events queued for delivery, with attempt counts and last error."""
     return {"status": get_bus().status(), "events": get_bus().outbox()}
 
 
-@app.get("/events/dlq", dependencies=[Depends(require_api_key)])
+@api.get("/events/dlq", dependencies=[Depends(require_api_key)])
 def dead_letter_queue():
     """Events that exhausted their retries.
 
@@ -138,7 +150,7 @@ def dead_letter_queue():
     return {"count": len(get_bus().dead_letters()), "events": get_bus().dead_letters()}
 
 
-@app.post("/score", dependencies=[Depends(require_api_key)])
+@api.post("/score", dependencies=[Depends(require_api_key)])
 def score_event(event: IncidentEvent, http_request: Request):
     metrics.increment("scores_total")
     features = extract_features(event.model_dump())
@@ -171,3 +183,25 @@ def score_event(event: IncidentEvent, http_request: Request):
     }
     save_event("incident_score", result)
     return result
+
+
+@app.get("/version")
+def version():
+    """What this service speaks, so a consumer can check rather than assume."""
+    return {
+        "service": "ai-incident-detection-platform",
+        "current": API_VERSION,
+        "supported": [API_VERSION],
+        "unversioned_alias": {
+            "status": "deprecated",
+            "note": ("the same endpoints are served without a /v1 prefix for "
+                     "consumers that predate versioning; new callers should use "
+                     f"/{API_VERSION}"),
+        },
+    }
+
+
+# Mounted twice, one set of handlers. The alias is hidden from the schema so the
+# generated docs show one interface rather than two identical ones.
+app.include_router(api, prefix=f"/{API_VERSION}")
+app.include_router(api, include_in_schema=False)
