@@ -105,12 +105,18 @@ def metrics_endpoint():
 
 
 @api.get("/events", dependencies=[Depends(require_api_key)])
-def events(limit: int = 20):
-    return {"events": recent_events(limit=min(limit, 100))}
+def events(limit: int = 20, request_id: str | None = None):
+    """Recent events, optionally narrowed to one request id.
+
+    `request_id` is what makes this endpoint a trace source rather than a log
+    tail: the portfolio's scripts/trace.py asks all five services the same
+    question and joins the answers into one timeline.
+    """
+    return {"events": recent_events(limit=min(limit, 100), request_id=request_id)}
 
 
 @api.get("/incidents/active", dependencies=[Depends(require_api_key)])
-def list_active_incidents(service: str | None = None):
+def list_active_incidents(http_request: Request, service: str | None = None):
     """Which services are currently in an incident.
 
     Consumed by the customer operations service: a complaint about a service
@@ -120,6 +126,13 @@ def list_active_incidents(service: str | None = None):
     metrics.increment("incident_lookups_total")
     if service:
         incident = active_incident(service)
+        # Recorded so the lookup appears in a cross-service trace; without it the
+        # edge that changes an operations decision leaves no evidence it ran.
+        save_event(
+            "incident_lookup",
+            {"service": service, "active": incident is not None},
+            current_request_id(http_request),
+        )
         return {
             "service": service,
             "active": incident is not None,
@@ -181,7 +194,7 @@ def score_event(event: IncidentEvent, http_request: Request):
         "features": features_as_dict(features),
         **prediction,
     }
-    save_event("incident_score", result)
+    save_event("incident_score", result, current_request_id(http_request))
     return result
 
 
