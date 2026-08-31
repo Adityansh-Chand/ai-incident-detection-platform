@@ -351,12 +351,17 @@ handling that makes push usable.
 - An `IsolationForest` genuinely fitted on normal traffic. The service loads that
   artifact; there are no hardcoded constants in the scoring path.
 - Chronological splitting, enforced in code, so no episode leaks across the boundary.
-- The alerting threshold is calibrated on a validation window against a stated
-  precision target — not chosen by eye.
+- The alerting threshold is calibrated, not chosen by eye — against a stated precision
+  target on the served track, and from a **label-free alert budget** on the real-data
+  track, where a calibration window with zero labelled anomalies made precision
+  targeting undefined. Both are described in
+  [ADR-002](docs/adr/002-alert-budget-over-precision-target.md).
 - Rare-event metrics (precision, recall, PR-AUC, episode recall, detection latency,
   alerts/hour) rather than accuracy.
 - A z-score baseline reported side by side, including where it wins.
 - Telemetry and training run reproducible, verified in CI on every push.
+- [Architecture decision records](docs/adr/) for the three contested choices, including
+  the decision to publish the fitted model losing to arithmetic on real telemetry.
 
 **What is explicitly not real:**
 
