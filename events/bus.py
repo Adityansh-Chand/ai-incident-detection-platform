@@ -153,7 +153,7 @@ class EventBus:
             headers["X-Request-ID"] = event["request_id"]
 
         request = urllib.request.Request(
-            f"{event['subscriber']}/events/incident",
+            f"{event['subscriber']}/v1/events/incident",
             data=body, headers=headers, method="POST",
         )
         try:
